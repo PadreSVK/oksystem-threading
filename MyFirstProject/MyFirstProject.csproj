@@ -7,4 +7,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Update="test.md" CopyToOutputDirectory="PreserveNewest" />
+
+  </ItemGroup>
+
 </Project>
