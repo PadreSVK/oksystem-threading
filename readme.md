@@ -106,6 +106,22 @@ Console.ReadLine();
 </details> 
 
 
+
+## Sample 2
+
+```csharp
+class ThreadSafeCache<TKey, TValue>
+{
+    private readonly Dictionary<TKey, TValue> _cache = new();
+    private readonly ReaderWriterLockSlim _lock = new();
+
+    public TValue Get(TKey key) { /* reader lock */ }
+    public void Set(TKey key, TValue value) { /* writer lock */ }
+}
+```
+<details>
+  <summary>hint</summary>
+
 ```csharp
 // Example: Configuration cache with frequent reads, rare updates
 class ConfigurationCache
