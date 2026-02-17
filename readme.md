@@ -104,3 +104,92 @@ Console.ReadLine();
 ```
 
 </details> 
+
+
+```csharp
+// Example: Configuration cache with frequent reads, rare updates
+class ConfigurationCache
+{
+    private Dictionary<string, string> _config = new();
+    private readonly ReaderWriterLockSlim _lock = new();
+
+    // Readers: High frequency, low cost
+    public string GetConfig(string key)
+    {
+        _lock.EnterReadLock();  // ← Can have multiple readers simultaneously
+        try
+        {
+            if (_config.TryGetValue(key, out var value))
+                return value;
+            throw new KeyNotFoundException($"Key {key} not found");
+        }
+        finally
+        {
+            _lock.ExitReadLock();
+        }
+    }
+
+    // Writer: Low frequency, exclusive access
+    public void UpdateConfig(string key, string value)
+    {
+        _lock.EnterWriteLock();  // ← Blocks all readers AND other writers
+        try
+        {
+            _config[key] = value;
+            Console.WriteLine($"Updated {key} = {value}");
+        }
+        finally
+        {
+            _lock.ExitWriteLock();
+        }
+    }
+
+    // Upgrade pattern: Reader → Writer (careful!)
+    public void IncrementCounter(string key, int amount)
+    {
+        _lock.EnterUpgradeableReadLock();  // ← Can escalate to write
+        try
+        {
+            if (_config.TryGetValue(key, out var val) && int.TryParse(val, out var num))
+            {
+                _lock.EnterWriteLock();  // ← Upgrade to exclusive
+                try
+                {
+                    _config[key] = (num + amount).ToString();
+                }
+                finally
+                {
+                    _lock.ExitWriteLock();
+                }
+            }
+        }
+        finally
+        {
+            _lock.ExitUpgradeableReadLock();
+        }
+    }
+}
+
+// Usage
+var cache = new ConfigurationCache();
+
+// 100 read threads
+for (int i = 0; i < 100; i++)
+{
+    new Thread(() =>
+    {
+        for (int j = 0; j < 10000; j++)
+        {
+            try { cache.GetConfig("db_host"); }
+            catch { /* not found */ }
+        }
+    }).Start();
+}
+
+// 1 write thread (rare)
+new Thread(() =>
+{
+    Thread.Sleep(1000);
+    cache.UpdateConfig("db_host", "localhost:5432");
+}).Start();
+```
