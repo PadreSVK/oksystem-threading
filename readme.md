@@ -67,6 +67,40 @@ Console.WriteLine("The final counter is " + threadCounter.Values.Sum());
 
 Console.ReadLine(); // wait for thread1 and thread2 to finish work
 ```
+```csharp
+int counter = 0;
 
+void Increase()
+{
+    // Local variable to track this specific thread's work
+    int localCount = 0;
+
+    Thread.SpinWait(Random.Shared.Next(100, 5000)); 
+
+    for (int i = 0; i < 1000000; i++)
+    {
+        Interlocked.Increment(ref counter);
+        localCount++;
+    }
+
+    // Log Thread ID and the local work done
+    Console.WriteLine($"[Thread {Thread.CurrentThread.ManagedThreadId}] The counter is {localCount}");
+}
+
+Thread t1 = new Thread(Increase);
+Thread t2 = new Thread(Increase);
+
+t1.Start();
+t2.Start();
+
+// Wait for threads to complete before moving forward
+t1.Join();
+t2.Join();
+
+// Now this will accurately show 2000000
+Console.WriteLine("The final counter is " + counter);
+
+Console.ReadLine();
+```
 
 </details> 
