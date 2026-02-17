@@ -15,7 +15,7 @@ Thread t1 = new Thread(Increase);
 Thread t2 = new Thread(Increase);
 // Start threads (Fire and forget)
 t1.Start();
-t2.Start();
+t2.Start(); 
 
 
 Console.WriteLine("The final counter is " + counter);
@@ -37,3 +37,36 @@ The counter is 1000000
 The final counter is 2000000
 
 ```
+<details>
+  <summary>Solutions</summary>
+
+```csharp
+ThreadLocal<int> threadCounter = new ThreadLocal<int>(() => 0, trackAllValues: true);
+
+void Increase()
+{
+    Thread.SpinWait(Random.Shared.Next(100, 5000)); // simulate work
+    for (int i = 0; i < 1000000; i++)
+    {
+         threadCounter.Value++;
+    }
+    Console.WriteLine("The counter is " + threadCounter.Value);
+}
+
+Thread t1 = new Thread(Increase);
+Thread t2 = new Thread(Increase);
+// Start threads
+t1.Start();
+t2.Start();
+
+// Wait for threads to finish
+t1.Join();
+t2.Join();
+
+Console.WriteLine("The final counter is " + threadCounter.Values.Sum());
+
+Console.ReadLine(); // wait for thread1 and thread2 to finish work
+```
+
+
+</details> 
