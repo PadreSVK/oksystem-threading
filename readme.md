@@ -1,0 +1,39 @@
+```csharp
+int counter = 0;
+
+void Increase()
+{
+    Thread.SpinWait(Random.Shared.Next(100, 5000)); // simulate work
+    for (int i = 0; i < 1000000; i++)
+    {
+        Interlocked.Increment(ref counter);
+    }
+    Console.WriteLine("The counter is " + counter);
+}
+
+Thread t1 = new Thread(Increase);
+Thread t2 = new Thread(Increase);
+// Start threads (Fire and forget)
+t1.Start();
+t2.Start();
+
+
+Console.WriteLine("The final counter is " + counter);
+
+Console.ReadLine(); // wait for thread1 and thread2 to finish work
+
+/* Why this (👆) code write:
+
+The final counter is 0
+The counter is 1936770
+The counter is 2000000
+
+hint: log Thread id (`Thread.CurrentThread.ManagedThreadId`) to `The counter is` log.
+do not forget wait for threads completion (`Thread.Join()`)
+
+📝 Fix code to write 
+The counter is 1000000
+The counter is 1000000
+The final counter is 2000000
+
+```
